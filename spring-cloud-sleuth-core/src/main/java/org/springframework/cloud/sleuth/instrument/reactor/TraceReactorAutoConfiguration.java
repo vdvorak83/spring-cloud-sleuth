@@ -35,7 +35,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.sleuth.instrument.async.TraceableScheduledExecutorService;
+import org.springframework.cloud.sleuth.instrument.async.TracingRunnableDecorator;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFluxAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -118,11 +118,10 @@ class HookRegisteringBeanDefinitionRegistryPostProcessor
 		Hooks.onEachOperator(
 				TraceReactorAutoConfiguration.TraceReactorConfiguration.SLEUTH_TRACE_REACTOR_KEY,
 				ReactorSleuth.scopePassingSpanOperator(this.context));
-		Schedulers.setExecutorServiceDecorator(
+
+		Schedulers.onScheduleHook(
 				TraceReactorAutoConfiguration.SLEUTH_REACTOR_EXECUTOR_SERVICE_KEY,
-				(scheduler,
-						scheduledExecutorService) -> new TraceableScheduledExecutorService(
-								beanFactory, scheduledExecutorService));
+				new TracingRunnableDecorator(beanFactory));
 	}
 
 }
